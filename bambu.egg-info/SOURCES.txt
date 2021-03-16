@@ -1,0 +1,7 @@
+README.md
+setup.py
+bambu.egg-info/PKG-INFO
+bambu.egg-info/SOURCES.txt
+bambu.egg-info/dependency_links.txt
+bambu.egg-info/entry_points.txt
+bambu.egg-info/top_level.txt
