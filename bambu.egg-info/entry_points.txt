@@ -1,3 +1,4 @@
 [console_scripts]
 bambu-preprocess = bambu.preprocessing:main
+bambu-train-model = bambu.training:main
 
