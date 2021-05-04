@@ -3,7 +3,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import GridSearchCV
 import pickle 
+
+GRADIENT_BOOSTING_CLASSIFIER_PARAMS = {'max_depth': range(1, 21), 'n_estimators': range(10, 201, 10)}
 
 def train_model(preprocess_csv, output_model):
     df = pd.read_csv(preprocess_csv)
@@ -11,6 +14,9 @@ def train_model(preprocess_csv, output_model):
     y = df['ACTIVITY']
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     model = GradientBoostingClassifier()
+    grid_search = GridSearchCV(model, GRADIENT_BOOSTING_CLASSIFIER_PARAMS, scoring='f1')
+    grid_search.fit(X_train, y_train)
+    model = grid_search.best_estimator_
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     report = classification_report(y_test, y_pred)
