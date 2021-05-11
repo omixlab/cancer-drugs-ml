@@ -5,11 +5,13 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import TomekLinks
 from imblearn.over_sampling import SMOTE
+from BorutaShap import BorutaShap 
 import pandas as pd
 import rdkit
 import argparse
+import json 
 
-def preprocess_dataset(assays_csv, assays_sdf, output_csv_train, output_csv_test, balancing_strategy, remove_tomek_links):
+def preprocess_dataset(assays_csv, assays_sdf, output_csv_train, output_csv_test, balancing_strategy, remove_tomek_links, feature_selection):
     df_labels = pd.read_csv(assays_csv)
     df_labels = df_labels.drop([0, 1, 2])
     df_labels = df_labels[['PUBCHEM_SID', 'PUBCHEM_ACTIVITY_OUTCOME']]
@@ -24,12 +26,23 @@ def preprocess_dataset(assays_csv, assays_sdf, output_csv_train, output_csv_test
     X = df_joined.drop(['ACTIVITY'], axis=1)
     y = df_joined['ACTIVITY']
     X_train, X_test, y_train, y_test = train_test_split(X, y)
+    if feature_selection:
+        Feature_Selector = create_feature_selector(X_train, y_train)
+        X_train = X_train[Feature_Selector.columns]
+        X_test = X_test[Feature_Selector.columns]
+        with open(feature_selection, 'w') as handle:
+            handle.write(json.dumps(list(Feature_Selector.columns)))
     df_train = X_train
     df_train['ACTIVITY'] = y_train
     df_train.to_csv(output_csv_train, index=False)
     df_test = X_test
     df_test['ACTIVITY'] = y_test
     df_test.to_csv(output_csv_test, index=False)
+    
+def create_feature_selector(X, y):
+    Feature_Selector = BorutaShap(importance_measure='shap', classification=True)
+    Feature_Selector.fit(X=X, y=y, n_trials=100, random_state=0)
+    return Feature_Selector
 
 def compute_descriptors(assays_sdf):
     mols = Chem.SDMolSupplier(assays_sdf)
@@ -97,8 +110,9 @@ def main():
     argument_parser.add_argument('--output_csv_test', required=True, help='path to output CSV test')
     argument_parser.add_argument('--balancing_strategy', default=None, choices=['random_undersampling', 'random_oversampling', 'smote'], help='data balancing strategy')
     argument_parser.add_argument('--remove_tomek_links', default=False, action='store_true', help='remove tomek links')
+    argument_parser.add_argument('--feature_selection', default=None, help='path to a file containing the columns selected by feature selection algorithm')
     arguments = argument_parser.parse_args()
-    preprocess_dataset(assays_csv=arguments.assays_csv, assays_sdf=arguments.assays_sdf, output_csv_test=arguments.output_csv_test, output_csv_train=arguments.output_csv_train, balancing_strategy=arguments.balancing_strategy, remove_tomek_links=arguments.remove_tomek_links)
+    preprocess_dataset(assays_csv=arguments.assays_csv, assays_sdf=arguments.assays_sdf, output_csv_test=arguments.output_csv_test, output_csv_train=arguments.output_csv_train, balancing_strategy=arguments.balancing_strategy, remove_tomek_links=arguments.remove_tomek_links, feature_selection=arguments.feature_selection)
     
 
 if __name__=="__main__":
