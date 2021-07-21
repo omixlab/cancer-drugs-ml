@@ -5,12 +5,14 @@ from sklearn.metrics import classification_report
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 import pickle 
-from sklearn.svm import SVC 
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier 
 
 CLASSIFIERS_PARAMS = [
     ('GradientBoostingClassifier', GradientBoostingClassifier(), {'max_depth': range(1, 21), 'n_estimators': range(10, 201, 10)}),
     ('RandomForestClassifier', RandomForestClassifier(), {'max_depth': range(1, 21)}),
     #('SVC', SVC(),{'C': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], 'kernel': ['linear', 'poly', 'rbf', 'sigmoid']})
+    ('DecisionTreeClassifier', DecisionTreeClassifier(), {'max_depth': range(1, 21), 'criterion': ['gini', 'entropy']})
     ]
 
 def train_model(preprocess_csv, output_model, train_test_split_percent=0.25, grid_search_scoring='f1'):

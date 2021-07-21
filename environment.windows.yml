@@ -1,0 +1,14 @@
+name: cancer-drugs-ml
+channels: 
+  - rdkit
+  - msys2
+dependencies: 
+  - python=3.7
+  - jupyter
+  - rdkit
+  - pip
+  - m2-base
+  - make 
+  - pip:
+    - -r requirements.txt
+    - -e . 
