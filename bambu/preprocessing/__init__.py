@@ -19,19 +19,30 @@ def preprocess_dataset(assays_csv, assays_sdf, output_csv_train, output_csv_test
     df_features = compute_descriptors(assays_sdf)
     df_joined = pd.merge(df_features, df_labels, on = ['PUBCHEM_SID'] )
     df_joined = df_joined.drop(['PUBCHEM_SID', 'PUBCHEM_ACTIVITY_OUTCOME'], axis=1)
+    df_joined = df_joined.drop_duplicates(subset=[column for column in df_joined.columns if column != 'ACTIVITY'])
     df_joined = df_joined.dropna()
-    if balancing_strategy:
-        df_joined = balance_dataset(df_joined, balancing_strategy, remove_tomek_links)
 
     X = df_joined.drop(['ACTIVITY'], axis=1)
     y = df_joined['ACTIVITY']
+
     X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+    if balancing_strategy:
+        df_joined_train = balance_dataset(X_train, y_train, balancing_strategy, remove_tomek_links)
+        X_train = df_joined_train.drop(['ACTIVITY'], axis=1)
+        y_train = df_joined_train['ACTIVITY']
+    
+    df_joined_test = balance_dataset(X_test, y_test, 'random_undersampling', False)
+    X_test = df_joined_test.drop(['ACTIVITY'], axis=1)
+    y_test = df_joined_test['ACTIVITY']
+
     if feature_selection:
         Feature_Selector = create_feature_selector(X_train, y_train)
         X_train = X_train[Feature_Selector.columns]
         X_test = X_test[Feature_Selector.columns]
         with open(feature_selection, 'w') as handle:
             handle.write(json.dumps(list(Feature_Selector.columns)))
+
     df_train = X_train
     df_train['ACTIVITY'] = y_train
     df_train.to_csv(output_csv_train, index=False)
@@ -47,14 +58,20 @@ def create_feature_selector(X, y):
 def compute_descriptors(assays_sdf):
     mols = Chem.SDMolSupplier(assays_sdf)
     df_features = pd.DataFrame()
-    for mol in mols:
-        if mol == None:
-            break
-        mol_features = compute_mol_descriptors(mol)
-        mol_features['PUBCHEM_SID']=mol.GetPropsAsDict()['PUBCHEM_SUBSTANCE_ID']
-        df_features = df_features.append(mol_features, ignore_index=True)
+    success_mols = 0
+    failed_mols  = 0
+    for m, mol_features in enumerate(map(compute_mol_descriptors_wrapper, mols)):
+        if mol_features:
+            success_mols += 1
+            print('success on molecule: ', m, f'success: {success_mols}; failed: {failed_mols}')
+            df_features = df_features.append(mol_features, ignore_index=True)
+        else: 
+            print('failed on molecule: ', m, f'success: {success_mols}; failed: {failed_mols}')
+            failed_mols += 1
+            pass
     return df_features
 
+   
 def compute_mol_descriptors(mol):
     mol_features = {}
     mol_features['min_abs_partial_charge'] = Descriptors.MinAbsPartialCharge(mol)
@@ -87,14 +104,22 @@ def compute_mol_descriptors(mol):
     mol_features['hallkier_alpha'] = rdkit.Chem.GraphDescriptors.HallKierAlpha(mol)
     return mol_features
 
-def balance_dataset(df, balacing_strategy, remove_tomek_links):
+def compute_mol_descriptors_wrapper(mol):
+    try:
+        mol_features = compute_mol_descriptors(mol)
+        mol_features['PUBCHEM_SID']=mol.GetPropsAsDict()['PUBCHEM_SUBSTANCE_ID']
+        return mol_features
+    except:
+        return None
+
+def balance_dataset(X, y, balacing_strategy, remove_tomek_links):
     if balacing_strategy == 'random_undersampling':
         sampler = RandomUnderSampler()
     elif balacing_strategy == 'random_oversampling':
         sampler = RandomOverSampler()
     elif balacing_strategy == 'smote':
         sampler = SMOTE()
-    df_sampler,labels = sampler.fit_resample(df.drop(['ACTIVITY'],axis=1), df['ACTIVITY'])
+    df_sampler,labels = sampler.fit_resample(X, y)
     df_sampler['ACTIVITY'] = labels
     if remove_tomek_links:
         tomek_links_sampler = TomekLinks()
