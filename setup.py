@@ -9,6 +9,7 @@ setup(
     keywords="bioinformatics machine-learning data science",
     entry_points = {'console_scripts':[
         'bambu-preprocess = bambu.preprocessing:main',
-        'bambu-train-model = bambu.training:main'
+        'bambu-train-model = bambu.training:main',
+        'bambu-server = bambu.server:main'
         ]}
     )
