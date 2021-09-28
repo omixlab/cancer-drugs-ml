@@ -1,0 +1,17 @@
+[
+    {
+        "path": "data/models/melanoma/33/smote/model.pickle", 
+        "name": "UACC-257 Melanoma cell line inhibition",
+        "pubchem_bioasssay_id": "33"
+    },
+    {
+        "path": "data/models/melanoma/35/smote/model.pickle", 
+        "name": "SK-MEL-2 Melanoma cell line inhibition",
+        "pubchem_bioasssay_id": "35"
+    },
+    {
+        "path": "data/models/melanoma/39/smote/model.pickle", 
+        "name": "SK-MEL-28 Melanoma cell line inhibition",
+        "pubchem_bioasssay_id": "39"
+    }
+]

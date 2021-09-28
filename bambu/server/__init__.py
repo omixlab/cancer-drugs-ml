@@ -15,7 +15,7 @@ def run_server(models_json):
     for model in models:
         model["model"]=pickle.load(open(model["path"], "rb"))
         MODELS.append(model)
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", port=80)
 
 @app.route("/")
 def index():
