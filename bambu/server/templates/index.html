@@ -4,14 +4,27 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Bambu: (PubChem) BioAssays Models</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 </head>
 <body>
-    <h1>bambu</h1>
-    <hr>
-    <form action="predict" method="POST">
-        <input type="text" name="molecule">
-        <input type="submit">
-    </form>
+    <div class="container">
+        <h1>bambu</h1>
+        <hr>
+        Bambu is a platoform for QSAR analysis built on top of data from Pubchem BioAssays. Currently, the webserver provides models for: <br>
+        <ul>
+        {% for model in models %}
+            <li>{{ model['name']}} (PubChem BioAssay: <a href="https://pubchem.ncbi.nlm.nih.gov/bioassay/{{model['pubchem_bioasssay_id']}}">{{model['pubchem_bioasssay_id']}}</a>)</li>
+        {% endfor %}
+        </ul>
+        <br>
+        <h4>Run analysis</h4>
+        Submit a molecule in SMILES format to be analyzed by the Bambu models. Predictions will be provided along with a local explaination generated
+        by the SHAP algorithm.
+        <form action="predict" method="POST">
+            <input type="text" name="molecule" required>
+            <input type="submit" value="submit">
+        </form>
+    </div>
 </body>
 </html>

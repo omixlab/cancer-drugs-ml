@@ -1,0 +1,1 @@
+web: bambu-server --models_json data/config/models.json

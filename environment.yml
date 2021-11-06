@@ -6,6 +6,8 @@ dependencies:
   - jupyter
   - rdkit
   - pip
+  - llvmlite
+  - numba
   - pip:
     - -r requirements.txt
     - -e . 

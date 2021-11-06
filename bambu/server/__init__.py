@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from rdkit import Chem
 from bambu.preprocessing import compute_mol_descriptors
+from shap import Explainer
 import argparse 
 import json
 import pandas as pd
@@ -14,11 +15,11 @@ def run_server(models_json):
     for model in models:
         model["model"]=pickle.load(open(model["path"], "rb"))
         MODELS.append(model)
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", port=80)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", models=MODELS)
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -28,9 +29,20 @@ def predict():
     df_descriptors = pd.DataFrame([descriptors])
     results = []
     for model in MODELS: 
+
         prediction = model["model"].predict(df_descriptors)
-        results.append((model["name"], prediction))
-    return render_template("results.html", results=results)
+        prediction_proba = model["model"].predict_proba(df_descriptors)[0,-1]
+        explainer = Explainer(model['model'])
+        values = explainer((df_descriptors)).values[0]
+
+        if len(values.shape) >= 2:
+            values = values[:, 1]
+               
+        feature_importance = pd.DataFrame(list(zip(df_descriptors.columns, values)),columns=['descriptor','feature_importance_vals'])
+        feature_importance.sort_values(by=['feature_importance_vals'],ascending=False,inplace=True)
+
+        results.append((model["name"], prediction, prediction_proba, feature_importance))
+    return render_template("results.html", results=results, enumerate=enumerate)
 
 def main():
     argument_parser = argparse.ArgumentParser()

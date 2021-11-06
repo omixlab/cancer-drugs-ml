@@ -18,5 +18,6 @@
         "path": "data/models/melanoma/639/smote/model.pickle",
         "name": "Estrogen Receptor-alpha inhibition",
         "pubchem_bioasssay_id": "639"
-    },
+
+    }
 ]
